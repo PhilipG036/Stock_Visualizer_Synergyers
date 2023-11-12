@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %} Stock Home {% endblock title %}
+{% block content %}
+<h1>Stock Visualistion</h1>
+<p>Select Country</p>
+<input type="radio" id="india" checked name="country"><label for="india">India</label>
+<input type="radio" id="us" name="country"><label for="us">US</label>
+<h4>Prediction</h4>
+<form action="/" method="post" class="form">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label" for="forecast_days">Forecast Days</label>
+    <input class="form-control" type="number" name="forecast_days" id="forecast_days" min="0" value="3">
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="model_name">Select Model</label>
+    <select class="form-select form-select-lg mb-3" aria-label="Select Model" name="model_name" id="model_name">
+      <option value="tree" selected>RandomForest</option>
+      <option value="svm">SVR</option>
+      <option value="lstm">LSTM</option>
+      <option value="arima">ARIMA</option>
+    </select>
+  </div>
+  <div class="md-3">
+    <label class="form-label" for="user_input">Select Stock</label>
+    <select class="form-select form-select-lg mb-3" aria-label="Select Stocks" name="user_input" id="user_input" style="max-width: 60vw;">
+      <option value="{{default.symbol}}" selected>{{default.name}}</option>
+      {% for symbol, name in stock_data %}
+      <option value="{{symbol}}">{{name}}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="btn btn-primary" type="submit">Predict</button>
+  <br>
+  <br>
+  <h3>Predicted Value</h3>
+  {% for pred in predicted %}
+  <p>{{pred}}</p>
+  {% endfor %}
+  {% if stock_info %}
+  <canvas id="stock_graph" style="width:100%;max-width:700px"></canvas>
+  <script defer>
+    const open = [
+      {% for open in open_list %}
+        {{open}},
+      {% endfor %}
+    ];
+    const x = []
+    for (let i = 0; i < 200; i++) x.push(i)
+    const adj = [
+      {% for adj in adj_list %}
+        {{adj}},
+      {% endfor %}
+    ];
+
+    new Chart("stock_graph", {
+      type: "line",
+      data: {
+        labels: x,
+        datasets: [
+          {
+            borderColor: "red",
+            pointRadius: 1,
+            data: open,
+            fill: false,
+            label: 'Predicted'
+          },
+          {
+            borderColor: "blue",
+            data: adj,
+            pointRadius: 1,
+            label: 'Original',
+            fill: false
+          },
+        ],
+      },
+    }); 
+  </script>
+  {% endif %}
+  {% if stock_info %}
+  <h3>Stock Values</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Predicted</th>
+        <th>Original</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for open, adj in stock_info %}
+      <tr>
+        <td>{{open}}</td>
+        <td>{{adj}}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td>...</td>
+        <td>...</td>
+      </tr>
+    </tbody>
+  </table>
+  {% endif %}
+</form>
+{% endblock content %}
